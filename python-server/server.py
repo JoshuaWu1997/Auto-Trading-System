@@ -1,12 +1,8 @@
+import importlib
 import socket
 import threading
+
 from crawler import CrawlHistory
-import importlib
-
-host_port = open('setting.txt', 'r')
-
-
-# port = host_port.readline().split(',')[3]
 
 
 def main():

@@ -3,9 +3,9 @@
 @Author :JohsuaWu1997
 @Date   :28/05/2020
 """
-from strategy import BasicStrategy
 import numpy as np
 import torch
+from strategy import BasicStrategy
 
 cuda = torch.device('cuda')
 
@@ -15,12 +15,12 @@ class ActorNet(torch.nn.Module):
         super(ActorNet, self).__init__()
         self.nn = torch.nn.Sequential(
             torch.nn.Linear(input_dim, hidden_dim),
-            torch.nn.Tanh(),
-            torch.nn.Linear(hidden_dim, hidden_dim),
-            torch.nn.Tanh(),
-            torch.nn.Linear(hidden_dim, output_dim),
             torch.nn.ReLU(),
-            torch.nn.Linear(output_dim, output_dim),
+            torch.nn.Linear(hidden_dim, hidden_dim),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_dim, hidden_dim),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_dim, output_dim),
             torch.nn.Softmax(dim=1)
         )
 

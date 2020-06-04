@@ -1,8 +1,9 @@
-import pymysql
-import numpy as np
-import pandas as pd
 import datetime
 import time
+
+import numpy as np
+import pandas as pd
+import pymysql
 from crawler import Crawler
 
 
@@ -270,7 +271,7 @@ class BasicStrategy:
 
 
 if __name__ == '__main__':
-    from modules.DDPG import Strategy
+    from modules.MLP import Strategy
 
-    broker = Strategy(10)
+    broker = Strategy(8)
     broker.test()

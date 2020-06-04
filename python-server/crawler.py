@@ -1,14 +1,14 @@
-import pymysql
+import datetime
+import re
+import time
 import urllib
 import urllib.request
-import re
-import numpy as np
-import time
-import pandas as pd
-import datetime
 
-host_port = open('setting.txt', 'r')
-[host, port] = host_port.readline().split(',')[:2]
+import numpy as np
+import pandas as pd
+import pymysql
+
+[host, port] = ['127.0.0.1', 3306]
 
 
 def is_trade():
@@ -24,7 +24,7 @@ def is_trade():
 class Crawler:
     def __init__(self):
         self.conn = pymysql.connect(host=host,
-                                    port=int(port),
+                                    port=port,
                                     user='root',
                                     password='123456',
                                     database='crawlerdb',
