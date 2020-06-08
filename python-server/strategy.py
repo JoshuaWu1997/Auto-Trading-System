@@ -39,8 +39,8 @@ class BasicStrategy:
         self.get_position()
         self.unit = 100
         self.scale = 1000000
-        self.valid_cash = 0
-        self.total_asset = 0
+        self.cash = 0
+        self.net_value = 0
         self.length = 0
         self.round = 0
         self.output_dims = len(self.stock_list) - 1
@@ -65,7 +65,7 @@ class BasicStrategy:
         # get account info
         cursor = self.userDB.cursor()
         cursor.execute('select valid_cash from trade_list where t_id= %s', self.trade_id)
-        self.valid_cash = np.ravel(cursor.fetchall())[0]
+        self.cash = np.ravel(cursor.fetchall())[0]
         cursor.close()
 
         # get total position info
@@ -90,14 +90,13 @@ class BasicStrategy:
         self.set_total_asset()
 
     def set_total_asset(self):
-        self.total_asset = self.valid_cash + \
-                           np.sum(self.position['total'] * self.position['curr_price'])
+        self.net_value = self.cash + np.sum(self.position['total'] * self.position['curr_price'])
         cursor = self.userDB.cursor()
         cursor.execute('update trade_list set total_asset=%s,valid_cash=%s where t_id= %s',
-                       [str(self.total_asset), str(self.valid_cash), self.trade_id])
+                       [str(self.net_value), str(self.cash), self.trade_id])
         cursor.execute('commit')
         cursor.close()
-        print('current Net Value:\t', self.total_asset)
+        print('current Net Value:\t', self.net_value)
         print(self.position['total'].values.tolist())
 
     def process_tick(self, s_id, curr):
@@ -115,14 +114,19 @@ class BasicStrategy:
         '''
         cost_buy = np.sum((amount * price)[amount > 0])
         cost_sell = np.sum((amount * price)[amount < 0])
-        if self.valid_cash < transaction_buy + cost_buy:
+        if self.cash < transaction_buy + transaction_sell + cost_buy:
+            ids, price, amount = ids[amount < 0], price[amount < 0], amount[amount < 0]
+            while len(ids) > 0 and self.cash < transaction_sell:
+                amount[0] += self.unit
+                ids, price, amount = ids[amount < 0], price[amount < 0], amount[amount < 0]
+                transaction_sell = -np.sum((amount * price) * 1.5e-3)
+            cost_sell = np.sum((amount * price)[amount < 0])
             cost = cost_sell + transaction_sell
             transaction_cost = transaction_sell
-            ids, price, amount = ids[amount < 0], price[amount < 0], amount[amount < 0]
         else:
             cost = cost_sell + transaction_sell + cost_buy + transaction_buy
             transaction_cost = transaction_sell + transaction_buy
-        self.valid_cash -= cost
+        self.cash -= cost
         print('current Order Cost:\t', transaction_cost)
         if len(ids) == 0:
             return -1
@@ -271,7 +275,7 @@ class BasicStrategy:
 
 
 if __name__ == '__main__':
-    from modules.MLP import Strategy
+    from modules.SVM import Strategy
 
-    broker = Strategy(8)
+    broker = Strategy(16)
     broker.test()
