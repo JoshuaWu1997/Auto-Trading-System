@@ -7,18 +7,9 @@ import urllib.request
 import numpy as np
 import pandas as pd
 import pymysql
+from utils import is_trade
 
 [host, port] = ['127.0.0.1', 3306]
-
-
-def is_trade():
-    date = str(datetime.datetime.now().date())
-    n_time = datetime.datetime.now()
-    m_start = datetime.datetime.strptime(date + '09:30', '%Y-%m-%d%H:%M')
-    m_end = datetime.datetime.strptime(date + '11:30', '%Y-%m-%d%H:%M')
-    n_start = datetime.datetime.strptime(date + '13:00', '%Y-%m-%d%H:%M')
-    n_end = datetime.datetime.strptime(date + '15:00', '%Y-%m-%d%H:%M')
-    return (m_start < n_time < m_end) or (n_start < n_time < n_end)
 
 
 class Crawler:
