@@ -122,5 +122,5 @@ class BasicStrategy:
 if __name__ == '__main__':
     from modules.SVM import Strategy
 
-    broker = Strategy(11)
+    broker = Strategy(12)
     broker.test()
