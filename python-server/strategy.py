@@ -120,7 +120,7 @@ class BasicStrategy:
 
 
 if __name__ == '__main__':
-    from modules.SVM import Strategy
+    from modules.replay import Replay
 
-    broker = Strategy(12)
+    broker = Replay(17)
     broker.test()

@@ -26,34 +26,44 @@ class Dealer(BasicDealer):
         cursor = self.user.cursor()
         cursor.execute('select begin_datetime,end_datetime from trade_list where t_id=%s', self.trade_id)
         [begin, end] = cursor.fetchall()[0]
+        cursor.close()
+
         cursor = self.crawler.cursor()
         cursor.execute(
             'select datetime from crawl_data where datetime between %s and %s group by datetime order by datetime',
             [begin, end])
         timestamps = [item[0] for item in cursor]
         cursor.close()
-        cursor = self.crawler.cursor()
-        cursor.execute(
-            'select id,price,buy,sell,amount from crawl_data where datetime between %s and %s order by datetime,id',
-            [begin, end])
-        ticks = [item for item in cursor]
-        ticks = [ticks[i * len(self.stock_list):(i + 1) * len(self.stock_list)] for i in range(len(timestamps))]
-        cursor.close()
-        ticks = dict(zip(timestamps, ticks))
+
+        ticks = dict(zip(timestamps, [[] for _ in range(len(timestamps))]))
+        for stock_id in self.stock_list:
+            cursor = self.crawler.cursor()
+            cursor.execute(
+                'select id,price,buy,sell,amount,datetime from crawl_data where datetime between %s and %s and id=%s',
+                [begin, end, stock_id]
+            )
+            for item in cursor:
+                ticks[item[-1]].append(item[:-1])
+            cursor.close()
         print('find total ' + str(len(timestamps)) + ' timestamps, test back starts now')
         self.get_position(timestamps[0])
         return timestamps, ticks
 
     def get_stock_list(self):
         cursor = self.user.cursor()
-        cursor.execute('SELECT stock_id FROM trade_stock where t_id=%s', self.trade_id)
+        cursor.execute('select trade_baseline from trade_list where t_id= %s', self.trade_id)
+        self.stock_list.append(cursor.fetchall()[0][0])
+        cursor.close()
+
+        cursor = self.user.cursor()
+        cursor.execute('SELECT stock_id FROM trade_stock where t_id=%s order by stock_id', self.trade_id)
         for item in cursor:
             self.stock_list.append(item[0])
         cursor.close()
-        if self.stock_list[0].startswith('all'):
-            self.stock_list = []
+        if self.stock_list[1].startswith('all'):
+            self.stock_list.pop()
             cursor = self.crawler.cursor()
-            cursor.execute('SELECT id FROM crawl_data group by id')
+            cursor.execute('SELECT id FROM crawl_data where id!=%s group by id order by id', [self.stock_list[0]])
             for item in cursor:
                 self.stock_list.append(item[0])
             cursor.close()
