@@ -10,7 +10,7 @@ from utils import print_transactions
 
 class BasicDealer:
     def __init__(self, trade_id, unit=100):
-        self.trade_id = trade_id
+        self.trade_id = str(trade_id)
         self.stock_list = []
         self.get_stock_list()
         self.position = None
@@ -33,28 +33,15 @@ class BasicDealer:
         print(self.stock_list)
 
     def get_position(self, n_time=None):
-        """
-        total = 'total possession on stock_i'
-        today = 'amount of stock_i bought on today (apply to t+1 policy)'
-        available = total - today
-        deal_price = 'the MOST RECENT deal price'
-        :return: DataFrame
-                total   today   available   deal_price  curr_price
-        stock1  *       *       *           *           *
-        stock2  *       *       *           *           *
-        ...
-        stock_n *       *       *           *           *
-        """
-        self.position = pd.DataFrame(0, columns=['total', 'today', 'available', 'deal_price', 'curr_price'],
-                                     index=self.stock_list).astype(float)
+        self.position = pd.DataFrame(0, columns=['volume', 'curr_price'], index=self.stock_list).astype(float)
         pass
         self.set_total_asset()
 
     def set_total_asset(self):
-        self.net_value = self.cash + np.sum(self.position['total'] * self.position['curr_price'])
+        self.net_value = self.cash + np.sum(self.position['volume'] * self.position['curr_price'])
         pass
         print('current Net Value:\t', self.net_value)
-        print(self.position['total'].values.tolist())
+        print(self.position['volume'].values.tolist())
 
     def update_database(self, ids, amount, price, n_time):
         pass
@@ -91,11 +78,10 @@ class BasicDealer:
             print('current Order Cost:\t', transaction_cost)
             if len(ids) == 0:
                 return -1
-            self.position.loc[ids[amount > 0], 'today'] += amount[amount > 0]
-            self.position.loc[ids[amount < 0], 'available'] += amount[amount < 0]
-            self.position.loc[ids, 'total'] += amount
+            self.position.loc[ids, 'volume'] += amount
 
             self.update_database(ids, price, amount, n_time)
+
             print_transactions(ids, price, amount)
             self.position.loc[s_id, 'curr_price'] = curr[:, 0]
             self.set_total_asset()

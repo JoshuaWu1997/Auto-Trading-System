@@ -82,8 +82,7 @@ class Dealer(BasicDealer):
         ...
         stock_n *       *       *           *           *
         """
-        self.position = pd.DataFrame(0, columns=['total', 'today', 'available', 'deal_price', 'curr_price'],
-                                     index=self.stock_list).astype(float)
+        self.position = pd.DataFrame(0, columns=['volume', 'curr_price'], index=self.stock_list).astype(float)
         # get account info
         cursor = self.user.cursor()
         cursor.execute('select valid_cash from trade_list where t_id= %s', self.trade_id)
@@ -94,32 +93,21 @@ class Dealer(BasicDealer):
         cursor = self.user.cursor()
         cursor.execute('select stock_id,volume from position where t_id= %s', self.trade_id)
         for i in cursor:
-            self.position.loc[i[0]]['total'] = float(i[1])
+            self.position.loc[i[0]]['volume'] = float(i[1])
         cursor.close()
-
-        # get today transaction info
-        cursor = self.user.cursor()
-        cursor.execute('select stock_id,volume,direction,price,transaction_datetime ' +
-                       'from trade_detail where t_id= %s', self.trade_id)
-        for i in cursor:
-            if i[2] == 'buy' and is_today(i[4], n_time):
-                self.position.loc[i[0]]['today'] += float(i[1])
-                self.position.loc[i[0]]['deal_price'] = float(i[3])
-        cursor.close()
-        self.position['available'] = self.position['total'] - self.position['today']
 
         # set total asset info
         self.set_total_asset()
 
     def set_total_asset(self):
-        self.net_value = self.cash + np.sum(self.position['total'] * self.position['curr_price'])
+        self.net_value = self.cash + np.sum(self.position['volume'] * self.position['curr_price'])
         cursor = self.user.cursor()
         cursor.execute('update trade_list set total_asset=%s,valid_cash=%s where t_id= %s',
                        [str(self.net_value), str(self.cash), self.trade_id])
         cursor.execute('commit')
         cursor.close()
         print('current Net Value:\t', self.net_value)
-        print(self.position['total'].values.tolist())
+        print(self.position['volume'].values.tolist())
 
     def update_database(self, ids, price, amount, n_time):
         cursor = self.user.cursor()
@@ -128,12 +116,12 @@ class Dealer(BasicDealer):
         update_sql = 'update position set volume=%s where t_id= %s and stock_id= %s'
         detail_sql = 'insert into trade_detail values (%s,%s,%s,%s,%s,%s)'
 
-        delete_list = np.logical_and(amount < 0, self.position.loc[ids, 'total'].values == 0)
-        insert_list = np.logical_and(amount > 0, self.position.loc[ids, 'total'].values == amount)
+        delete_list = np.logical_and(amount < 0, self.position.loc[ids, 'volume'].values == 0)
+        insert_list = np.logical_and(amount > 0, self.position.loc[ids, 'volume'].values == amount)
         update_list = np.logical_not(np.logical_or(delete_list, insert_list))
 
         direct_str = np.asarray(['buy' if i > 0 else 'sell' for i in amount])
-        insert_update = np.asarray([(str(self.position.loc[ids[i], 'total']), self.trade_id, ids[i]) for i in
+        insert_update = np.asarray([(str(self.position.loc[ids[i], 'volume']), self.trade_id, ids[i]) for i in
                                     range(len(ids))])
         delete = np.asarray([(self.trade_id, ids[i]) for i in range(len(ids))])
         detail = np.asarray(

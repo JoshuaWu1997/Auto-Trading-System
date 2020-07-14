@@ -16,7 +16,6 @@ class BasicStrategy:
         self.dealer = Dealer(self.trade_id, self.unit)
 
         self.n_time = None
-        self.p_time = None
         self.tick = None
         self.order = [[], []]
 
@@ -27,10 +26,6 @@ class BasicStrategy:
         self.model = None
 
     def process(self):
-        if self.p_time is not None:
-            if not self.p_time.date() == self.n_time.date():
-                self.dealer.get_position(self.n_time)
-        self.p_time = self.n_time
         print(self.n_time)
         start_time = time.time()  #
         s_id = np.asarray([tick[0] for tick in self.tick])
@@ -97,7 +92,7 @@ class BasicStrategy:
     def get_order(self, s_id, curr):
         print('round: ', self.round)
         ids, amount = [], []
-        avail = self.dealer.position.loc[s_id, 'total'].values[1:].ravel()
+        avail = self.dealer.position.loc[s_id, 'volume'].values[1:].ravel()
         if self.round < self.length - 1:
             print('get_data')
             self.replay_buffer[self.round] = curr[1:].T
@@ -120,7 +115,7 @@ class BasicStrategy:
 
 
 if __name__ == '__main__':
-    from modules.replay import Replay
+    from modules.SVM import Strategy
 
-    broker = Replay(17)
+    broker = Strategy(18)
     broker.test()
