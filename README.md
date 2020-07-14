@@ -70,4 +70,12 @@ An example market can be downloaded from:
 
 GDrive: https://drive.google.com/file/d/12kxx7ccB3uSeskM8e7mbJXcQnJAs57JB/view?usp=sharing
 
-In addition, the `crawler.py` module is an implementation to crawl SH50 real-time market from Sina Finance. This provides a example about data structures in MySQL databases.
+In addition, the `crawler.py` module is an implementation to crawl SH50 real-time market from Sina Finance. This provides an example about data structures in MySQL databases.
+
+## Redis
+
+An example redis database is added which is the same as that of MySQL.
+
+## More databases...
+
+The interface of databases is completely seperated from main workflow. `Dealer` in `dealer.py` is the base class to deal with database-related communications and structures.
