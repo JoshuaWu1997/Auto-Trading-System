@@ -35,9 +35,10 @@ class Dealer(BasicDealer):
         for time_step in market_iter:
             if self.begin <= time_step[0] <= self.end:
                 tick = json.loads(time_step[1])
-                tick = [[index] + [
-                    float(tick[index][item]) for item in ['price', 'buy', 'sell', 'amount']
-                ] for index in self.stock_list]
+                tick = [
+                    [index] + [float(tick[index][item]) for item in ['buy', 'sell', 'amount']]
+                    for index in self.stock_list
+                ]
                 ticks[time_step[0]] = tick
         timestamps = list(ticks.keys())
         timestamps.sort()

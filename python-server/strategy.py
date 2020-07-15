@@ -35,25 +35,6 @@ class BasicStrategy:
         end_time = time.time()  #
         print('<<<<<<<<<< process_tick uses ' + str(end_time - start_time) + 's >>>>>>>>>>')  #
 
-    def send_socket(self, is_send):
-        try:
-            if is_send:
-                self.socket.send((str(self.n_time) + ',sent\n').encode('utf-8'))
-            else:
-                self.socket.send('pass\n'.encode('utf-8'))
-            msg = self.socket.recv(1024).decode('utf-8')
-            print(msg)
-            if msg.strip().endswith('over'):
-                raise Exception('Received over from client socket')
-            elif not msg.strip().endswith('received'):
-                print(msg.strip())
-                time.sleep(10)
-        except Exception as identifier:
-            print('The client socket closed (Termination).')
-            print(identifier)
-            return False
-        return True
-
     def run(self):
         while True:
             is_send = False
@@ -79,6 +60,25 @@ class BasicStrategy:
             if self.socket is not None:
                 if not self.send_socket(True):
                     break
+
+    def send_socket(self, is_send):
+        try:
+            if is_send:
+                self.socket.send((str(self.n_time) + ',sent\n').encode('utf-8'))
+            else:
+                self.socket.send('pass\n'.encode('utf-8'))
+            msg = self.socket.recv(1024).decode('utf-8')
+            print(msg)
+            if msg.strip().endswith('over'):
+                raise Exception('Received over from client socket')
+            elif not msg.strip().endswith('received'):
+                print(msg.strip())
+                time.sleep(10)
+        except Exception as identifier:
+            print('The client socket closed (Termination).')
+            print(identifier)
+            return False
+        return True
 
     def load_model(self):
         pass
